@@ -1,0 +1,75 @@
+version: 2
+jobs:
+  test:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:8.2.1
+        environment:
+          NODE_ENV: test
+    steps:
+      - checkout
+      - run:
+          name: Update conatiner repositories
+          command: sudo apt-get update
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Run tests
+          command: npm test
+      # - run:
+      #     name: Install codeclimate reporter module
+      #     command: sudo npm install -g codeclimate-test-reporter
+      # - run:
+      #     name: Send test coverage stats to code climate
+      #     command: codeclimate-test-reporter < coverage/lcov.info
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+  build:
+    working_directory: /app
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --no-cache \
+              py-pip=9.0.0-r1
+            pip install \
+              docker-compose==1.12.0 \
+              awscli==1.11.76
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build -t ${AWS_ECR_REPO_NAME}:latest \
+            -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
+      - deploy:
+          name: Push application Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
+              ${login}
+              docker push ${AWS_ECR_REPO_NAME}:latest
+              docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
+            fi
+
+workflows:
+  version: 2
+  test-build:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
