@@ -62,6 +62,15 @@ jobs:
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
             fi
 
+# Per Jeff, we want this workflow:
+# Human: hello-cammis GitHub repo is tagged with <major>.<minor>.<patch> (regex: \d+\.\d+\.\d+)
+# CircleCI: Build container
+# CircleCI: Push container to ECR with GitHub tag
+
+# Aaron: currently this does a test run with every branch commit, which leaves
+# an artifact that can be pushed to ECR.  The artifact is not pushed to ECR
+# unless it's in master branch and tagged
+
 workflows:
   version: 2
   test-build:
@@ -72,4 +81,6 @@ workflows:
             - test
           filters:
             branches:
-              only: master
+              only: aburt-master
+            tags:
+              only: /\d+\.\d+\.\d+/
