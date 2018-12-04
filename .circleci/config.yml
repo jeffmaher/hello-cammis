@@ -57,14 +57,17 @@ jobs:
       - deploy:
           name: Push application Docker image
           command: |
-            if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
+            echo "Branch: ${CIRCLE_BRANCH}"
+            echo "Tag: ${CIRCLE_TAG}"
+            #if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
               login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
+              echo "login: $login"
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:latest
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
               docker push ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:git-branch-${CIRCLE_BRANCH}
-            fi
+            #fi
 
 # Per Jeff, we want this workflow:
 # Human: hello-cammis GitHub repo is tagged with <major>.<minor>.<patch> (regex: \d+\.\d+\.\d+)
