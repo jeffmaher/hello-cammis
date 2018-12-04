@@ -51,6 +51,8 @@ jobs:
           name: Build application Docker image
           command: |
             docker build -t ${AWS_ECR_REPO_NAME}:latest \
+            -t ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG} \
+            -t ${AWS_ECR_REPO_NAME}:git-branch-${CIRCLE_BRANCH} \
             -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
       - deploy:
           name: Push application Docker image
