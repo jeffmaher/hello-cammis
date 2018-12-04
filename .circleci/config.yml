@@ -50,9 +50,8 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build -t ${AWS_ECR_REPO_NAME}:latest \
+            docker build -t \
             -t ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG} \
-            -t ${AWS_ECR_REPO_NAME}:git-branch-${CIRCLE_BRANCH} \
             -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
       - deploy:
           name: Push application Docker image
@@ -63,10 +62,8 @@ jobs:
             #if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
               login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
               ${login}
-              docker push ${AWS_ECR_REPO_NAME}:latest
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
               docker push ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG}
-              docker push ${AWS_ECR_REPO_NAME}:git-branch-${CIRCLE_BRANCH}
             #fi
 
 # Per Jeff, we want this workflow:
@@ -74,10 +71,9 @@ jobs:
 # CircleCI: Build container
 # CircleCI: Push container to ECR with GitHub tag
 
-# Aaron: currently this does a test run with every branch commit, which leaves
-# an artifact that can be pushed to ECR.  The artifact is not pushed to ECR
-# unless it's in master branch and tagged
-
+# This will run the "test" job on any git-push, but the "build" job only on a tag push
+# For a tag push, the branch info is empty.
+# The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
   version: 2
   test-build:
