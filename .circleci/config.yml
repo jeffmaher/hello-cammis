@@ -60,7 +60,7 @@ jobs:
             echo "Branch: ${CIRCLE_BRANCH}"
             echo "Tag: ${CIRCLE_TAG}"
             #if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
-              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)"
+              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
               docker push ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG}
