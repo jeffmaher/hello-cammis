@@ -60,6 +60,8 @@ jobs:
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:latest
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
+              docker push ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG}
+              docker push ${AWS_ECR_REPO_NAME}:git-branch-${CIRCLE_BRANCH}
             fi
 
 # Per Jeff, we want this workflow:
