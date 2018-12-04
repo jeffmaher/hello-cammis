@@ -76,6 +76,9 @@ workflows:
   test-build:
     jobs:
       - test
+          filters:
+            tags:
+              only: /.*/
       - build:
           requires:
             - test
