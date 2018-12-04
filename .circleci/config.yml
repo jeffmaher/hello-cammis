@@ -59,12 +59,12 @@ jobs:
             echo "SHA1: ${CIRCLE_SHA1}"
             echo "Branch: ${CIRCLE_BRANCH}"
             echo "Tag: ${CIRCLE_TAG}"
-            #if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
+            if [ "${CIRCLE_TAG}" ]; then
               login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
               docker push ${AWS_ECR_REPO_NAME}:git-tag-${CIRCLE_TAG}
-            #fi
+            fi
 
 # Per Jeff, we want this workflow:
 # Human: hello-cammis GitHub repo is tagged with <major>.<minor>.<patch> (regex: \d+\.\d+\.\d+)
