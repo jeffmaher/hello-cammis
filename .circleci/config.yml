@@ -84,6 +84,6 @@ workflows:
             - test
           filters:
             branches:
-              only: aburt-master
+              ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
