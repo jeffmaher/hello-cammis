@@ -55,7 +55,7 @@ jobs:
       - deploy:
           name: Push application Docker image
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            if [ "${CIRCLE_BRANCH}" == "aburt-master" ]; then
               login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:latest
