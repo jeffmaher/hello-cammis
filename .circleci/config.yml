@@ -50,26 +50,37 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build -t ${AWS_ECR_REPO_NAME}:latest \
+            docker build -t ${AWS_ECR_REPO_NAME}:${CIRCLE_TAG} \
             -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
       - deploy:
           name: Push application Docker image
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            echo "SHA1: ${CIRCLE_SHA1}"
+            echo "Branch: ${CIRCLE_BRANCH}"
+            echo "Tag: ${CIRCLE_TAG}"
+            if [ "${CIRCLE_TAG}" ]; then
               login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
               ${login}
-              docker push ${AWS_ECR_REPO_NAME}:latest
+              docker push ${AWS_ECR_REPO_NAME}:${CIRCLE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
             fi
 
+# This will run the "test" job on any git-push, but the "build" job only on a tag push
+# For a tag push, the branch info is empty.
+# The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
   version: 2
   test-build:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /.*/
       - build:
           requires:
             - test
           filters:
             branches:
-              only: master
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
