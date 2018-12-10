@@ -32,6 +32,8 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths: .
+      - command: |
+          echo ${CIRCLE_PULL_REQUEST}
   build:
     working_directory: /app
     docker:
