@@ -33,7 +33,7 @@ jobs:
           root: ~/repo
           paths: .
       - command: |
-          echo ${CIRCLE_PULL_REQUEST}
+          echo "PULL REQUEST NUMBER: ${CIRCLE_PULL_REQUEST}"
   build:
     working_directory: /app
     docker:
