@@ -9,6 +9,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Print out Pull Request
+          command: |
+            echo "PULL REQUEST NUMBER: ${CIRCLE_PULL_REQUEST}"
+      - run:
           name: Update conatiner repositories
           command: sudo apt-get update
       - restore_cache:
@@ -32,8 +36,6 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths: .
-      - command: |
-          echo "PULL REQUEST NUMBER: ${CIRCLE_PULL_REQUEST}"
   build:
     working_directory: /app
     docker:
