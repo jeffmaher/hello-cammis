@@ -118,7 +118,7 @@ jobs:
           command: |
             env
             echo ----
-            #apk add --no-cache curl
+            apk add --no-cache curl
             echo Calling back to CircleCI
             curl -u ${CIRCLE_API_KEY}: -d build_parameters[CIRCLE_JOB]=terraform_apply https://circleci.com/api/v1.1/project/github/ca-mmis/poc-review-env/tree/master
 
