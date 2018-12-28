@@ -64,21 +64,6 @@ jobs:
               docker push ${AWS_ECR_REPO_NAME}:${CIRCLE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
             fi
-  review-env:
-    working_directory: /app
-    docker:
-      - image: docker:17.05.0-ce-git
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Trigger building a review environment
-          command: |
-            env
-            echo ----
-            #apk add --no-cache curl
-            echo Calling back to CircleCI
-            curl -u ${CIRCLE_API_KEY}: -d build_parameters[CIRCLE_JOB]=terraform_apply https://circleci.com/api/v1.1/project/github/ca-mmis/poc-review-env/tree/master
   # This is slightly different from "build" - ENV_NAME instead of tag, triggers the review-env at the end
   build-review:
     working_directory: /app
