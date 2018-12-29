@@ -136,10 +136,14 @@ workflows:
       - test:
           filters:
             branches:
-              only: poc-review-env
+              only:
+                - poc-review-env
+                - poc-review-env-dummy-pr
       - build-review:
           requires:
             - test
           filters:
             branches:
-              only: poc-review-env
+              only:
+                - poc-review-env
+                - poc-review-env-dummy-pr
