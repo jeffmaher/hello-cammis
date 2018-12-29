@@ -86,7 +86,7 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/(hello-cammis)/(pull)/(9)|review_\2_\pr\4|')
+            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/([^/]+)/(pull)/([0-9]+)$|review_\2_\pr\4|')
             docker build -t ${AWS_ECR_REPO_NAME}:${REVIEW_ENV_NAME} \
             -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
       - deploy:
@@ -97,7 +97,7 @@ jobs:
             echo "Tag: ${CIRCLE_TAG}"
             login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
             ${login}
-            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/(hello-cammis)/(pull)/(9)|review_\2_\pr\4|')
+            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/([^/]+)/(pull)/([0-9]+)$|review_\2_\pr\4|')
             docker push ${AWS_ECR_REPO_NAME}:${REVIEW_ENV_NAME}
             docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
       - run:
@@ -108,7 +108,7 @@ jobs:
             # Forcing updates because of old image
             apk add -U -u curl
             echo Calling back to CircleCI
-            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/(hello-cammis)/(pull)/(9)|review_\2_\pr\4|')
+            REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/([^/]+)/(pull)/([0-9]+)$|review_\2_\pr\4|')
             curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"terraform_apply\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/poc-review-env/tree/master
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
