@@ -116,7 +116,7 @@ jobs:
             # Forcing updates because of old image
             apk add -U -u curl
             echo Calling CircleCI to build review environment
-            curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"terraform_apply\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\",\"GIT_SHA1\":\"${CIRCLE_SHA1}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/poc-review-env/tree/master
+            curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"terraform_apply\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\",\"GIT_SHA1\":\"${GIT_SHA1}\",\"GIT_REPONAME\":\"${CIRCLE_PROJECT_REPONAME}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/poc-review-env/tree/master
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
 # The "test" job will spawn a build-review job if there's a Pull-Request defined
