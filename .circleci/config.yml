@@ -35,8 +35,8 @@ jobs:
             if [ $CIRCLE_PULL_REQUEST ] ; then
               echo Calling build-review job for PR: $CIRCLE_PULL_REQUEST
               echo Git SHA1 to build: $CIRCLE_SHA1
-              # Reformat pull-request URL to "review_REPONAME_pr##"
-              REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/([^/]+)/(pull)/([0-9]+)$|review_\2_\pr\4|')
+              GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
+              REVIEW_ENV_NAME="review_${CIRCLE_BRANCH}_pr${GIT_PR_NUM}"
               # Trigger "build-review" job in this CircleCI config
               curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"build-review\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\",\"GIT_SHA1\":\"${CIRCLE_SHA1}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/hello-cammis/tree/${CIRCLE_BRANCH}
             fi
