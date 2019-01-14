@@ -38,7 +38,15 @@ jobs:
               GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
               REVIEW_ENV_NAME="review_${CIRCLE_BRANCH}_pr${GIT_PR_NUM}"
               # Trigger "build-review" job in this CircleCI config
-              curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"build-review\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\",\"GIT_SHA1\":\"${CIRCLE_SHA1}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/hello-cammis/tree/${CIRCLE_BRANCH}
+              CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
+              # Generate JSON doc with build parameters
+              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"build-review\""
+              CCI_PARAMS="${CCI_PARAMS},\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\""
+              CCI_PARAMS="${CCI_PARAMS},\"GIT_SHA1\":\"${CIRCLE_SHA1}\"}}"
+              curl -u ${CIRCLE_API_KEY}: -X POST \
+                --header "Content-Type: application/json" \
+                -d "${CCI_PARAMS}" \
+                ${CCI_API_URL}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}
             fi
       - persist_to_workspace:
           root: ~/repo
