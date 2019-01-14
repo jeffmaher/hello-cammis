@@ -29,6 +29,15 @@ jobs:
       # - run:
       #     name: Send test coverage stats to code climate
       #     command: codeclimate-test-reporter < coverage/lcov.info
+      - run:
+          name: Trigger Review Environment for PR
+          command: |
+            if [ $CIRCLE_PULL_REQUEST ] ; then
+              echo Calling build-review job for PR: $CIRCLE_PULL_REQUEST
+              echo Git SHA1 to build: $CIRCLE_SHA1
+              REVIEW_ENV_NAME=$(echo $CIRCLE_PULL_REQUEST | sed -r 's|https://github.com/(ca-mmis)/([^/]+)/(pull)/([0-9]+)$|review_\2_\pr\4|')
+              curl -u ${CIRCLE_API_KEY}: -X POST --header "Content-Type: application/json" -d "{\"build_parameters\":{\"CIRCLE_JOB\":\"build-review\",\"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\",\"GIT_SHA1\":\"${CIRCLE_SHA1}\"}}" https://circleci.com/api/v1.1/project/github/ca-mmis/hello-cammis/tree/master
+            fi
       - persist_to_workspace:
           root: ~/repo
           paths: .
@@ -64,8 +73,39 @@ jobs:
               docker push ${AWS_ECR_REPO_NAME}:${CIRCLE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
             fi
+  # This is like the "build" job but for PR-review builds.
+  # Triggered via API, with name and Git-SHA1 of the version to build.
+  build-review:
+    working_directory: /app
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --no-cache \
+              py-pip=9.0.0-r1
+            pip install \
+              docker-compose==1.12.0 \
+              awscli==1.11.76
+      - run:
+          name: Build application Docker image
+          command: |
+            git checkout ${GIT_SHA1}
+            docker build -t ${AWS_ECR_REPO_NAME}:${REVIEW_ENV_NAME} \
+              -t ${AWS_ECR_REPO_NAME}:commit-${GIT_SHA1} .
+      - deploy:
+          name: Push application Docker image
+          command: |
+            login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
+            ${login}
+            docker push ${AWS_ECR_REPO_NAME}:${REVIEW_ENV_NAME}
+            docker push ${AWS_ECR_REPO_NAME}:commit-${GIT_SHA1}
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
+# The "test" job will spawn a build-review job if there's a Pull-Request defined
 # For a tag push, the branch info is empty.
 # The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
