@@ -77,7 +77,7 @@ jobs:
             if [ "${REVIEW_ENV_NAME}" ]; then 
               IMAGE_TAG="${REVIEW_ENV_NAME}"
             elif [ "${CIRCLE_TAG}" ]; then
-              IMAGE_TAG="${CIRCLE_TAG}"
+              IMAGE_TAG="version-${CIRCLE_TAG}"
             else
               echo "No Docker image tag!"
             fi
