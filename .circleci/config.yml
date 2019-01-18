@@ -36,7 +36,7 @@ jobs:
               echo Calling build job for PR: $CIRCLE_PULL_REQUEST
               echo Git SHA1 to build: $CIRCLE_SHA1
               GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
-              REVIEW_ENV_NAME="review_${CIRCLE_BRANCH}_pr${GIT_PR_NUM}"
+              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_pr${GIT_PR_NUM}"
               # Trigger "build" job in this CircleCI config with review env name
               CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
               # Generate JSON doc with build parameters
