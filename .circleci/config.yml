@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Update conatiner repositories
+          name: Update container repositories
           command: sudo apt-get update
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -74,7 +74,7 @@ jobs:
             echo "Git Branch: ${CIRCLE_BRANCH}"
             echo "Git Tag: ${CIRCLE_TAG}"
             echo "Review Env: ${REVIEW_ENV_NAME}"
-            if [ "${REVIEW_ENV_NAME}" ]; then 
+            if [ "${REVIEW_ENV_NAME}" ]; then
               IMAGE_TAG="${REVIEW_ENV_NAME}"
             elif [ "${CIRCLE_TAG}" ]; then
               IMAGE_TAG="version-${CIRCLE_TAG}"
@@ -88,6 +88,30 @@ jobs:
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:${IMAGE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
+            fi
+      - run:
+          name: If review build, trigger a review-environment deploy
+          command: |
+            if [ "${REVIEW_ENV_NAME}" ]; then
+              env
+              echo ----
+              echo Calling Terraform job for PR: $CIRCLE_PULL_REQUEST
+              echo "Git SHA1: ${CIRCLE_SHA1}"
+              echo "Git Branch: ${CIRCLE_BRANCH}"
+              echo "Review Env: ${REVIEW_ENV_NAME}"
+              # Forcing updates because of old image
+              apk add -U -u curl
+              echo Calling back to CircleCI terraform_apply job
+              CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
+              # Generate JSON doc with build parameters
+              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"terraform_apply\", \
+                \"GIT_SHA1\":\"${CIRCLE_SHA1}\", \
+                \"GIT_REPONAME\":\"${CIRCLE_PROJECT_REPONAME}\", \
+                \"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\"}}"
+              curl -u ${CIRCLE_API_KEY}: -X POST \
+                --header "Content-Type: application/json" \
+                -d "${CCI_PARAMS}" \
+                ${CCI_API_URL}/CI-review-dev/tree/master
             fi
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
