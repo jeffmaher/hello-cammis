@@ -1,34 +1,52 @@
-version: 2
+version: 2.0
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:8.2.1
+      environment:
+        NODE_ENV: test
+
 jobs:
+  cc-install:
+    <<: *defaults
+    steps:
+      - run:
+          name:  Download cc-test-reporter
+          command: |
+            mkdir -p tmp/
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./tmp/cc-test-reporter
+            chmod +x ./tmp/cc-test-reporter
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - cc-test-reporter
   test:
-    working_directory: ~/repo
-    docker:
-      - image: circleci/node:8.2.1
-        environment:
-          NODE_ENV: test
+    <<: *defaults
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/repo/tmp
+      - run:
+          name: Install node modules
+          command: npm install
       - run:
           name: Update container repositories
           command: sudo apt-get update
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: Install node modules
-          command: npm install
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
-          name: Run tests
-          command: npm test
-      # - run:
-      #     name: Install codeclimate reporter module
-      #     command: sudo npm install -g codeclimate-test-reporter
-      # - run:
-      #     name: Send test coverage stats to code climate
-      #     command: codeclimate-test-reporter < coverage/lcov.info
+          name: Run frontend testss
+          command: |
+            npm test
+            ./tmp/cc-test-reporter format-coverage -t lcov -o tmp/codeclimate.frontend.json coverage/frontend/lcov.info
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - codeclimate.frontend.json
       - run:
           name: If pull-request, trigger a review build
           command: |
@@ -48,8 +66,18 @@ jobs:
                 ${CCI_API_URL}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}
             fi
       - persist_to_workspace:
-          root: ~/repo
+          root: ~/repo/tmp
           paths: .
+  upload-coverage:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/repo/tmp
+      - run:
+          name: Upload coverage results to Code Climate
+          command: |
+            ./tmp/cc-test-reporter sum-coverage tmp/codeclimate.*.json -p 1 -o tmp/codeclimate.total.json
+            ./tmp/cc-test-reporter upload-coverage -i tmp/codeclimate.total.json
   # This will build a Docker image and push it to an ECR
   # Triggered by tagging the repo in GitHub, or via CircleCI API for PRs
   build:
@@ -122,10 +150,17 @@ workflows:
   version: 2
   test-build:
     jobs:
+      - cc-install
       - test:
           filters:
             tags:
               only: /.*/
+          requires:
+            - cc-install
+      - upload-coverage:
+          requires:
+            - test
+            - cc-install
       - build:
           requires:
             - test
