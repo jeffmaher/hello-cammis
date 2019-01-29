@@ -7,12 +7,7 @@ const healthcheck = require('./lib/healthcheck');
 const PORT = process.env.PORT || 3000;
 
 
-app.get('/', (req,res) => {
-  res.send(hello('CAMMIS'));
-  res.status(200)
-});
-
-app.get('/hello', (req,res) => {
+app.get(['/', '/hello'], (req,res) => {
   res.send(hello('CAMMIS'));
   res.status(200)
 });
