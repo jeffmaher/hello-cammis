@@ -6,7 +6,8 @@
   "dependencies": {
     "express": "^4.16.4",
     "mocha": "^5.2.0",
-    "nyc": "^13.1.0"
+    "nyc": "^13.1.0",
+    "axios": "0.18.0"
   },
   "devDependencies": {},
   "scripts": {

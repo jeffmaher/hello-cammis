@@ -5,21 +5,22 @@
 # hello-cammis
 A small nodejs api for hello world, used for testing and POC with PATS IAC
 
-# Building Docker Image Locally
+## Setup Instructions
 
-`sh docker/build-local.sh`
+In order to run this project, you'll need to have an instance of [hello-cammis-data](https://github.com/ca-mmis/hello-cammis-data) running that it can connect to. The following environment var
 
-# Running Docker Image Locally
+## Local Development Docker Convenience Scripts
 
-`sh docker/run-local.sh`
+These all assume that hello-cammis-data is running on `localhost` at port `8000`.
 
-# Running Docker Image Terminal Locally
+- Building Image: `sh docker/build-local.sh`
+- Running App Server: `sh docker/run-local.sh`
+- Running Terminal: `sh docker/terminal-local.sh`
 
-`sh docker/terminal-local.sh`
+## Running Docker Image
 
-# Running Docker Image
+`docker run -p 3000:3000 -e HELLO_CAMMIS_DATA_HOST="<url>" -e HELLO_CAMMIS_DATA_PORT="<port>" cadhcscammis/hello-cammis`
 
-`docker run -p 3000:3000 cadhcscammis/hello-cammis`
-
-##Optional environmental flags:
--e PORT = #### (desired port number, will need to correspond to -p above)
+### Optional environmental flags:
+ 
+- `-e PORT=<port>`: Desired port number, will need to correspond to `-p` above
