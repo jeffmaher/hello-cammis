@@ -129,7 +129,7 @@ jobs:
               curl -u ${CIRCLE_API_KEY}: -X POST \
                 --header "Content-Type: application/json" \
                 -d "${CCI_PARAMS}" \
-                ${CCI_API_URL}/CI-review-dev/tree/master
+                ${CCI_API_URL}/CI-review-dev/tree/PAT-168
             fi
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
