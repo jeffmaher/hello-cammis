@@ -83,18 +83,10 @@ jobs:
   build:
     working_directory: /app
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: cadhcscammis/infrastructure-private:5.1.0
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --no-cache \
-              py-pip=9.0.0-r1
-            pip install \
-              docker-compose==1.12.0 \
-              awscli==1.11.76
       - run:
           name: Build and push application Docker image
           command: |
@@ -112,7 +104,7 @@ jobs:
             if [ "${IMAGE_TAG}" ]; then
               docker build -t ${AWS_ECR_REPO_NAME}:${IMAGE_TAG} \
                 -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
-              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION)"
+              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email )"
               ${login}
               docker push ${AWS_ECR_REPO_NAME}:${IMAGE_TAG}
               docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
@@ -127,8 +119,6 @@ jobs:
               echo "Git SHA1: ${CIRCLE_SHA1}"
               echo "Git Branch: ${CIRCLE_BRANCH}"
               echo "Review Env: ${REVIEW_ENV_NAME}"
-              # Forcing updates because of old image
-              apk add -U -u curl
               echo Calling back to CircleCI terraform_apply job
               CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
               # Generate JSON doc with build parameters
