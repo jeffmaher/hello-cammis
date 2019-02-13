@@ -22,6 +22,9 @@ jobs:
             - cc-test-reporter
   test:
     <<: *defaults
+    working_directory: /app
+    docker:
+      - image: cadhcscammis/cammis-code-analyze:latest
     steps:
       - checkout
       - attach_workspace:
@@ -31,7 +34,7 @@ jobs:
           command: npm install
       - run:
           name: Update container repositories
-          command: sudo apt-get update
+          command: apk update
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - save_cache:
@@ -42,11 +45,31 @@ jobs:
           name: Run frontend testss
           command: |
             npm test
-            ./tmp/cc-test-reporter format-coverage -t lcov -o tmp/codeclimate.frontend.json coverage/frontend/lcov.info
+            ~/repo/tmp/cc-test-reporter format-coverage -t lcov -o ~/repo/tmp/codeclimate.frontend.json /app/coverage/frontend/lcov.info
       - persist_to_workspace:
-          root: tmp
+          root: ~/repo/tmp
           paths:
             - codeclimate.frontend.json
+      - run:
+          name: If pull-request, trigger a Sonarcloud scan and report results
+          command: |
+            if [ $CIRCLE_PULL_REQUEST ] ; then
+              GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
+              echo "Git Branch: ${CIRCLE_BRANCH}"
+              echo "Project Repo Name: ${CIRCLE_PROJECT_REPONAME}"
+              echo "Git PR Number: ${GIT_PR_NUM}"
+              /usr/bin/sonar-scanner   \
+                -Dsonar.projectKey=ca-mmis_hello-cammis \
+                -Dsonar.organization=ca-mmis \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=https://sonarcloud.io \
+                -Dsonar.login=f483c00aad342c431e1436cf5b417bb8ea4f0bff \
+                -Dsonar.pullrequest.base=master \
+                -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} \
+                -Dsonar.pullrequest.key=${GIT_PR_NUM} \
+                -Dsonar.pullrequest.provider=GitHub \
+                -Dsonar.pullrequest.github.repository=${CIRCLE_PROJECT_REPONAME}
+            fi
       - run:
           name: If pull-request, trigger a review build
           command: |
@@ -76,8 +99,8 @@ jobs:
       - run:
           name: Upload coverage results to Code Climate
           command: |
-            ./tmp/cc-test-reporter sum-coverage tmp/codeclimate.*.json -p 1 -o tmp/codeclimate.total.json
-            ./tmp/cc-test-reporter upload-coverage -i tmp/codeclimate.total.json
+            ~/repo/tmp/cc-test-reporter sum-coverage ~/repo/tmp/codeclimate.*.json -p 1 -o ~/repo/tmp/codeclimate.total.json
+            ~/repo/tmp/cc-test-reporter upload-coverage -i ~/repo/tmp/codeclimate.total.json
   # This will build a Docker image and push it to an ECR
   # Triggered by tagging the repo in GitHub, or via CircleCI API for PRs
   build:
