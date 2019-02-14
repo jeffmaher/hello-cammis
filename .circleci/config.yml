@@ -48,13 +48,13 @@ jobs:
           paths:
             - codeclimate.frontend.json
       - run:
-          name: If pull-request, trigger a review build
+          name: If review-branch, trigger a review build
           command: |
-            if [ $CIRCLE_PULL_REQUEST ] ; then
-              echo Calling build job for PR: $CIRCLE_PULL_REQUEST
+            # Test if $CIRCLE_BRANCH begins with "review_"
+            if [ $CIRCLE_BRANCH ] && [ ${CIRCLE_BRANCH#review_} != $CIRCLE_BRANCH ] ; then
+              echo Calling build job for branch: $CIRCLE_BRANCH
               echo Git SHA1 to build: $CIRCLE_SHA1
-              GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
-              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_pr${GIT_PR_NUM}"
+              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_br_${CIRCLE_BRANCH}"
               # Trigger "build" job in this CircleCI config with review env name
               CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
               # Generate JSON doc with build parameters
@@ -115,7 +115,7 @@ jobs:
             if [ "${REVIEW_ENV_NAME}" ]; then
               env
               echo ----
-              echo Calling Terraform job for PR: $CIRCLE_PULL_REQUEST
+              echo Calling Terraform job for branch: $CIRCLE_BRANCH
               echo "Git SHA1: ${CIRCLE_SHA1}"
               echo "Git Branch: ${CIRCLE_BRANCH}"
               echo "Review Env: ${REVIEW_ENV_NAME}"
@@ -133,7 +133,7 @@ jobs:
             fi
 
 # This will run the "test" job on any git-push, but the "build" job only on a tag push
-# The "test" job will also spawn a build job if there's a Pull-Request defined
+# The "test" job will also spawn a build job if it's a review-environment branch
 # For a tag push, the branch info is empty.
 # The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
