@@ -9,7 +9,7 @@ const axios = require('axios');
 
 
 app.get(['/', '/hello'], (req,res) => {
-  hello('CAMMIS v2', greeting => {
+  hello('CAMMIS v3', greeting => {
     // Success
     res.send({"message:": greeting});
     res.status(200);
