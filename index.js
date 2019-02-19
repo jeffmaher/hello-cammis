@@ -1,31 +1,19 @@
 'use strict';
 
+const config = require('./config');
 const express = require('express');
 const app = express();
-const hello = require('./lib/hello');
-const healthcheck = require('./lib/healthcheck');
-const PORT = process.env.PORT || 3000;
-const axios = require('axios');
+const middleware = require('./lib/middleware');
+const routes = require('./lib/routes');
 
+app.locals.config = config;
 
-app.get(['/', '/hello'], (req,res) => {
-  hello('CAMMIS', greeting => {
-    // Success
-    res.send({"message:": greeting});
-    res.status(200);
-  }, () => {
-    // Failure
-    res.send("Error processing request");
-    res.status(500);
-  });
+app.use(middleware.logger);
+
+app.use('/api', routes);
+
+app.use((req,res) => {
+  res.status(404).send('Resource Not Found');
 });
 
-app.get('/health', (req,res) => {
-  // TODO Add a ping to hello-cammis-data
-  // TODO split into alive and readiness check for K8S
-  res.send(healthcheck());
-  res.status(200)
-});
-
-
-app.listen(PORT, () => console.log(`Hello CAMMIS listening on port ${PORT}!`));
+app.listen(config.port, () => console.log(`Hello CAMMIS listening on port ${config.port}!`));

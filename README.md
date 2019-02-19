@@ -39,10 +39,17 @@ These all assume that hello-cammis-data is running on `localhost` at port `8000`
 - Running App Server: `sh docker/run-local.sh`
 - Running Terminal: `sh docker/terminal-local.sh`
 
+## Versioning
+
+The API is versioned the URL scheme is as follows /api/{version}/{resource}/{params}.
+
+An example versioned api looks like the following: /api/v1/hello/:name (where names is a dynamic value)
+
 ## Running Docker Image
 
 `docker run -p 3000:3000 -e HELLO_CAMMIS_DATA_HOST="<url>" -e HELLO_CAMMIS_DATA_PORT="<port>" cadhcscammis/hello-cammis`
 
 ### Optional environmental flags:
- 
+
 - `-e PORT=<port>`: Desired port number, will need to correspond to `-p` above
+- `-e HELLO_CAMMIS_DATA_HOST=<hello-cammis-data-hostname>: Hostname for hello-cammis-data api (if not provided hello-cammis serves static local data "solo mode")`

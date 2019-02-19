@@ -1,35 +1,50 @@
 'use strict';
-
-// Set some environment variables
-process.env.HELLO_CAMMIS_DATA_HOST = "localhost";
-process.env.HELLO_CAMMIS_DATA_PORT = "8000";
-
 // Imports
-const hello = require('../lib/hello');
 const assert = require('assert');
-const http = require("http");
 const express = require('express');
+const axios = require('axios');
+const MockAdapter = require('axios-mock-adapter');
 
-// Run a mock hello-cammis-data
-const mockHelloCammisData = express();
-const httpServer = http.createServer(mockHelloCammisData);
-mockHelloCammisData.get('/hello/*', (req, res) => res.send({"hello":"Hey there test!"}));
+const v1hello = require('../lib/routes/v1/hello/hello');
+const v2hello = require('../lib/routes/v2/hello/hello');
+const mock = new MockAdapter(axios);
 
 describe('Test hello functionality', function() {
-  beforeEach( () => {
-    httpServer.listen(process.env.HELLO_CAMMIS_DATA_PORT);
-  });
-  afterEach( () => {
-    httpServer.close();
-  });
+  describe('v1 hello cammis',() => {
 
-  describe('test hello cammis',function() {
-    it('returns hello cammis', function(done) {
-      let expected = "Hey there test!";
-      hello('anything', greeting => {
+    it('soloMode - it returns hello :name', (done) => {
+      let expected = "Hello test!";
+      v1hello.helloSolo('test', greeting => {
         assert.deepEqual(expected, greeting);
         done();
-      }, () => assert(false));
+      });
+    });
+  });
+
+  describe('v2 hello cammis', () => {
+
+    beforeEach(() => {
+      mock.onGet('/hello/test').reply(200, {
+          hello: "Hey there test!"
+      });
+    });
+
+    it('solo_mode - it returns hello :name', (done) => {
+      let expected = "Hello, welcome test!";
+      v2hello.helloSolo('test', greeting => {
+        assert.deepEqual(expected, greeting);
+        done();
+      });
+    });
+    it('returns Hey there test!', (done) => {
+      let config = {
+        helloCammisDataUrl: ""
+      };
+      let expected = "Hey there test!";
+        v2hello.helloApi('test', config, greeting => {
+          assert.deepEqual(expected, greeting);
+        });
+      done();
     });
   });
 });
