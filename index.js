@@ -10,7 +10,10 @@ app.locals.config = config;
 
 app.use(middleware.logger);
 
+app.use('/', express.static(config.staticPath));
+
 app.use('/api', routes);
+
 
 app.use((req,res) => {
   res.status(404).send('Resource Not Found');

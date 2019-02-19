@@ -10,5 +10,6 @@ const SOLO_MODE = check_solo(HELLO_CAMMIS_DATA_HOST);
 module.exports = {
   port: PORT,
   soloMode: SOLO_MODE,
-  helloCammisDataUrl: HELLO_CAMMIS_DATA_URL
+  helloCammisDataUrl: HELLO_CAMMIS_DATA_URL,
+  staticPath: 'static'
 };
