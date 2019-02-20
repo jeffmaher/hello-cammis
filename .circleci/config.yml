@@ -142,10 +142,10 @@ jobs:
               echo "Git SHA1: ${CIRCLE_SHA1}"
               echo "Git Branch: ${CIRCLE_BRANCH}"
               echo "Review Env: ${REVIEW_ENV_NAME}"
-              echo Calling back to CircleCI terraform_apply job
+              echo Calling back to CircleCI kube_deploy job
               CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
               # Generate JSON doc with build parameters
-              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"terraform_apply\", \
+              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"kube_deploy\", \
                 \"GIT_SHA1\":\"${CIRCLE_SHA1}\", \
                 \"GIT_REPONAME\":\"${CIRCLE_PROJECT_REPONAME}\", \
                 \"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\"}}"
