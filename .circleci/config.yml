@@ -162,6 +162,12 @@ workflows:
             - test
           filters:
             branches:
-              only: /^r_.+$/
+              ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
+      - build:
+          requires:
+            - test
+          filters:
+            branches:
+              only: /^r_.+$/
