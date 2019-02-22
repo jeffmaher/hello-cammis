@@ -144,7 +144,23 @@ jobs:
 # The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
   version: 2
-  test-build:
+  test-build: # test and optionally push review-env to ECR and Kube
+    jobs:
+      - cc-install
+      - test:
+          requires:
+            - cc-install
+      - upload-coverage:
+          requires:
+            - test
+            - cc-install
+      - build:  # For review-environments
+          requires:
+            - test
+          filters:
+            branches:
+              only: /^r_.+$/
+  build-tag: # test and push to ECR on tag event
     jobs:
       - cc-install
       - test:
@@ -165,9 +181,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
-      - build:
-          requires:
-            - test
-          filters:
-            branches:
-              only: /^r_.+$/
