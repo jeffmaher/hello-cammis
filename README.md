@@ -53,3 +53,4 @@ An example versioned api looks like the following: /api/v1/hello/:name (where na
 
 - `-e PORT=<port>`: Desired port number, will need to correspond to `-p` above
 - `-e HELLO_CAMMIS_DATA_HOST=<hello-cammis-data-hostname>: Hostname for hello-cammis-data api (if not provided hello-cammis serves static local data "solo mode")`
+
