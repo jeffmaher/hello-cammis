@@ -70,24 +70,6 @@ jobs:
                 -Dsonar.pullrequest.provider=GitHub \
                 -Dsonar.pullrequest.github.repository=${CIRCLE_PROJECT_REPONAME}
             fi
-      - run:
-          name: If pull-request, trigger a review build
-          command: |
-            if [ $CIRCLE_PULL_REQUEST ] ; then
-              echo Calling build job for PR: $CIRCLE_PULL_REQUEST
-              echo Git SHA1 to build: $CIRCLE_SHA1
-              GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
-              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_pr${GIT_PR_NUM}"
-              # Trigger "build" job in this CircleCI config with review env name
-              CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
-              # Generate JSON doc with build parameters
-              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"build\", \
-                \"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\"}}"
-              curl -u ${CIRCLE_API_KEY}: -X POST \
-                --header "Content-Type: application/json" \
-                -d "${CCI_PARAMS}" \
-                ${CCI_API_URL}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}
-            fi
       - persist_to_workspace:
           root: ~/repo/tmp
           paths: .
@@ -102,7 +84,8 @@ jobs:
             ~/repo/tmp/cc-test-reporter sum-coverage ~/repo/tmp/codeclimate.*.json -p 1 -o ~/repo/tmp/codeclimate.total.json
             ~/repo/tmp/cc-test-reporter upload-coverage -i ~/repo/tmp/codeclimate.total.json
   # This will build a Docker image and push it to an ECR
-  # Triggered by tagging the repo in GitHub, or via CircleCI API for PRs
+  # Triggered by tagging the repo or by pushing to a specially-named branch in GitHub
+  # The tag must be in ##.##.## format - see workflow below
   build:
     working_directory: /app
     docker:
@@ -116,33 +99,32 @@ jobs:
             echo "Git SHA1: ${CIRCLE_SHA1}"
             echo "Git Branch: ${CIRCLE_BRANCH}"
             echo "Git Tag: ${CIRCLE_TAG}"
-            echo "Review Env: ${REVIEW_ENV_NAME}"
-            if [ "${REVIEW_ENV_NAME}" ]; then
-              IMAGE_TAG="${REVIEW_ENV_NAME}"
+            if [ "${CIRCLE_BRANCH}" ] ; then
+              IMAGE_TAG="review_${CIRCLE_PROJECT_REPONAME}_br_${CIRCLE_BRANCH}"
+              echo "Review Environment image: ${IMAGE_TAG}"
             elif [ "${CIRCLE_TAG}" ]; then
               IMAGE_TAG="version-${CIRCLE_TAG}"
+              echo "Tag-build image: ${IMAGE_TAG}"
             else
               echo "No Docker image tag!"
+              false  # Fail here
             fi
-            if [ "${IMAGE_TAG}" ]; then
-              docker build -t ${AWS_ECR_REPO_NAME}:${IMAGE_TAG} \
-                -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
-              login="$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email )"
-              ${login}
-              docker push ${AWS_ECR_REPO_NAME}:${IMAGE_TAG}
-              docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
-            fi
+            docker build -t ${AWS_ECR_REPO_NAME}:${IMAGE_TAG} \
+              -t ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1} .
+            login="$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email )"
+            ${login}
+            docker push ${AWS_ECR_REPO_NAME}:${IMAGE_TAG}
+            docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
       - run:
           name: If review build, trigger a review-environment deploy
           command: |
-            if [ "${REVIEW_ENV_NAME}" ]; then
-              env
-              echo ----
-              echo Calling Terraform job for PR: $CIRCLE_PULL_REQUEST
+            # Local env vars are not shared between "run" stanzas
+            if [ "${CIRCLE_BRANCH}" ] ; then
+              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_br_${CIRCLE_BRANCH}"
+              echo "Calling back to CircleCI to build a Review Environment"
               echo "Git SHA1: ${CIRCLE_SHA1}"
               echo "Git Branch: ${CIRCLE_BRANCH}"
               echo "Review Env: ${REVIEW_ENV_NAME}"
-              echo Calling back to CircleCI kube_deploy job
               CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
               # Generate JSON doc with build parameters
               CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"kube_deploy\", \
@@ -155,9 +137,10 @@ jobs:
                 ${CCI_API_URL}/CI-review-dev/tree/master
             fi
 
-# This will run the "test" job on any git-push, but the "build" job only on a tag push
-# The "test" job will also spawn a build job if there's a Pull-Request defined
-# For a tag push, the branch info is empty.
+# This workflow will run the "test" job on any git-push.
+# It will run the "build" job only on a tag or branch push.
+# The filters control which tags/branches get built.
+# For a tag push, the branch info is empty, and vice-versa.
 # The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
   version: 2
@@ -179,6 +162,6 @@ workflows:
             - test
           filters:
             branches:
-              ignore: /.*/
+              only: /^r_.+$/
             tags:
               only: /^\d+\.\d+\.\d+$/
