@@ -62,3 +62,9 @@ typings/
 
 # Sonar Cloud working dir
 .scannerwork
+
+# Helm Chart dependency dirs
+charts
+
+# Helm requirement locks (ignore to keep out API keys)
+requirements.lock
