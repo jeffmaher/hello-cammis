@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build -t cadhcscammis/hello-cammis .
+docker build -t hello-cammis .
