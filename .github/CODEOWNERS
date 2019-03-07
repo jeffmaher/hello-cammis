@@ -1,0 +1,5 @@
+# Deployment related files should have a PATS code review
+Dockerfile          @ca-mmis/platform-and-tools-section 
+helm/*              @ca-mmis/platform-and-tools-section 
+.circleci/*         @ca-mmis/platform-and-tools-section
+.github/CODEOWNERS  @ca-mmis/platform-and-tools-section
