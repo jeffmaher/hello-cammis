@@ -44,6 +44,9 @@ spec:
         httpGet:
           path: /health
           port: {{ .Values.global.helloCammis.containerPort }}
+      securityContext:
+        runAsUser: 65534   # A value of 65534 maps to user "nobody"
+        allowPrivilegeEscalation: false
       # readinessProbe:
       #   initialDelaySeconds: 10
       #   periodSeconds: 60
