@@ -116,26 +116,23 @@ jobs:
             docker push ${AWS_ECR_REPO_NAME}:${IMAGE_TAG}
             docker push ${AWS_ECR_REPO_NAME}:commit-${CIRCLE_SHA1}
       - run:
-          name: If review build, trigger a review-environment deploy
+          name: Install review environment
           command: |
-            # Local env vars are not shared between "run" stanzas
+            echo "Git SHA1: ${CIRCLE_SHA1}"
+            echo "Git Branch: ${CIRCLE_BRANCH}"
+            echo "Git Tag: ${CIRCLE_TAG}"
             if [ "${CIRCLE_BRANCH}" ] ; then
-              REVIEW_ENV_NAME="review_${CIRCLE_PROJECT_REPONAME}_br_${CIRCLE_BRANCH}"
-              echo "Calling back to CircleCI to build a Review Environment"
-              echo "Git SHA1: ${CIRCLE_SHA1}"
-              echo "Git Branch: ${CIRCLE_BRANCH}"
-              echo "Review Env: ${REVIEW_ENV_NAME}"
-              CCI_API_URL="https://circleci.com/api/v1.1/project/github/ca-mmis"
-              # Generate JSON doc with build parameters
-              CCI_PARAMS="{\"build_parameters\":{\"CIRCLE_JOB\":\"kube_deploy\", \
-                \"GIT_SHA1\":\"${CIRCLE_SHA1}\", \
-                \"GIT_REPONAME\":\"${CIRCLE_PROJECT_REPONAME}\", \
-                \"REVIEW_ENV_NAME\":\"${REVIEW_ENV_NAME}\"}}"
-              curl -u ${CIRCLE_API_KEY}: -X POST \
-                --header "Content-Type: application/json" \
-                -d "${CCI_PARAMS}" \
-                ${CCI_API_URL}/CI-review-dev/tree/master
+              IMAGE_TAG="review_${CIRCLE_PROJECT_REPONAME}_br_${CIRCLE_BRANCH}"
+              echo "Review Environment image: ${IMAGE_TAG}"
+              export TILLER_NAMESPACE=$IMAGE_TAG
+              export HELM_HOST=localhost:44134
+              tiller --storage=secret &
+              helm init --client-only
+              helm install helm/hello-cammis -n ${IMAGE_TAG} --namespace ${IMAGE_TAG} --set global.helloCammis.imageVersion=${IMAGE_TAG}
+            else
+              echo "Not a review enviroment job"
             fi
+            export 
 
 # This workflow will run the "test" job on any git-push.
 # It will run the "build" job only on a tag or branch push.
