@@ -4,26 +4,6 @@
 
 [![Test Coverage](https://api.codeclimate.com/v1/badges/81eb79567ccf864d53cc/test_coverage)](https://codeclimate.com/github/ca-mmis/hello-cammis/test_coverage)
 
-## Sonarcloud
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=alert_status)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=code_smells)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=sqale_index)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=bugs)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=coverage)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=security_rating)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ca-mmis_hello-cammis&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=ca-mmis_hello-cammis)
-
 # hello-cammis
 A small nodejs api for hello world, used for testing and POC with PATS IAC
 
