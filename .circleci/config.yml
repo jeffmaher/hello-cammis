@@ -1,10 +1,41 @@
 version: 2.0
+#------------------------
+# --- REUSABLE CHUNKS ---
+# -----------------------
+
+env_vars: &env_vars
+  environment:
+    APP_NAME: hello-cammis
+    # To use, $(eval $TAG)
+    # Future TODO: Update TAG to work with build step
+    TAG: if [ "${CIRCLE_TAG}" ]; then echo "$CIRCLE_TAG"; else echo "$CIRCLE_BRANCH"; fi; 
+    # * Configure these in the CircleCI Job *
+    # AWS_ACCESS_KEY_ID: Access key for an AWS user account that can publish to ECR
+    # AWS_DEFAULT_OUTPUT: Set to `table` for human readable display in logs
+    # AWS_DEFAULT_REGION: Region to deploy review environments to
+    # AWS_ECR_REPO_NAME: URL or Docker namespace for the Docker image
+    # AWS_SECRET_ACCESS_KEY: Secret key for an AWS user account that can publish to ECR
+    # CC_TEST_REPORTER_ID: CodeClimate API key
+    # CIRCLE_API_KEY: Key for making HTTP requests to CircleCI's API
+    # GITHUB_ACCESS_TOKEN: Access token for the user committing the Helm Chart
+    # GIT_COMMITTER_NAME: Plain language name for user committing the Helm Chart
+    # GIT_COMMITTER_EMAIL: Email address for the user committing the Helm Chart
+
 defaults: &defaults
   working_directory: ~/repo
   docker:
     - image: circleci/node:8.2.1
       environment:
         NODE_ENV: test
+
+infrastructure_runtime: &infrastructure_runtime
+  docker:
+    - image: cadhcscammis/infrastructure-private:5.2.0
+  <<: *env_vars
+
+#------------------------
+# --- JOBS ---
+#------------------------
 
 jobs:
   cc-install:
@@ -20,7 +51,7 @@ jobs:
           root: tmp
           paths:
             - cc-test-reporter
-  test:
+  test: # Future TODO: Use the Docker image from this repo to run tests. Also, break different tests into different jobs to enable concurrent runs.
     <<: *defaults
     working_directory: /app
     docker:
@@ -88,12 +119,11 @@ jobs:
   # The tag must be in ##.##.## format - see workflow below
   build:
     working_directory: /app
-    docker:
-      - image: cadhcscammis/infrastructure-private:5.1.0
+    <<: *infrastructure_runtime
     steps:
       - checkout
       - setup_remote_docker
-      - run:
+      - run: # Future TODO: We should separate the build and publish. Built Docker container should be used for test steps and that chunk could be used
           name: Build and push application Docker image
           command: |
             echo "Git SHA1: ${CIRCLE_SHA1}"
@@ -136,6 +166,35 @@ jobs:
                 -d "${CCI_PARAMS}" \
                 ${CCI_API_URL}/CI-review-dev/tree/master
             fi
+  publish_helm:
+    <<: *infrastructure_runtime
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Add Helm Repo
+          command: helm repo add cammis https://${GITHUB_ACCESS_TOKEN}@raw.githubusercontent.com/ca-mmis/cammis-helm/master/
+      - run:
+          name: Pull down Helm Chart repo
+          command: |
+            git config --global user.name $GIT_COMMITTER_NAME
+            git config --global user.email $GIT_COMMITTER_EMAIL
+            git clone https://${GITHUB_ACCESS_TOKEN}@github.com/ca-mmis/cammis-helm.git
+      - run:
+          name: Package Helm Chart
+          command: helm_pkg.py -c helm/${APP_NAME} -v $(eval $TAG)
+      - run:
+          name: Publish Helm Chart
+          command: | 
+            mv helm/${APP_NAME}/${APP_NAME}-$(eval $TAG).tgz cammis-helm/.
+            helm repo index cammis-helm
+            git -C cammis-helm add .
+            git -C cammis-helm commit -m "Added ${APP_NAME}:$(eval $TAG)"
+            git -C cammis-helm push
+
+#------------------------
+# --- WORKFLOWS ---
+#------------------------
 
 # This workflow will run the "test" job on any git-push.
 # It will run the "build" job only on a tag or branch push.
@@ -167,4 +226,12 @@ workflows:
             branches:
               only: /^r_.+$/
             tags:
-              only: /^\d+\.\d+\.\d+$/
+              only: /^\d+\.\d+\.\d+(\-.*)?$/
+      - publish_helm:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+(\-.*)?$/
+
+          
