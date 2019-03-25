@@ -81,26 +81,6 @@ jobs:
           root: ~/repo/tmp
           paths:
             - codeclimate.frontend.json
-      - run:
-          name: If pull-request, trigger a Sonarcloud scan and report results
-          command: |
-            if [ $CIRCLE_PULL_REQUEST ] ; then
-              GIT_PR_NUM=${CIRCLE_PULL_REQUEST##*/}
-              echo "Git Branch: ${CIRCLE_BRANCH}"
-              echo "Project Repo Name: ${CIRCLE_PROJECT_REPONAME}"
-              echo "Git PR Number: ${GIT_PR_NUM}"
-              /usr/bin/sonar-scanner   \
-                -Dsonar.projectKey=ca-mmis_hello-cammis \
-                -Dsonar.organization=ca-mmis \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=https://sonarcloud.io \
-                -Dsonar.login=f483c00aad342c431e1436cf5b417bb8ea4f0bff \
-                -Dsonar.pullrequest.base=master \
-                -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} \
-                -Dsonar.pullrequest.key=${GIT_PR_NUM} \
-                -Dsonar.pullrequest.provider=GitHub \
-                -Dsonar.pullrequest.github.repository=${CIRCLE_PROJECT_REPONAME}
-            fi
       - persist_to_workspace:
           root: ~/repo/tmp
           paths: .
