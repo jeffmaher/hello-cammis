@@ -16,8 +16,12 @@ spec:
         app: {{.Values.global.helloCammis.name}}
     spec:
       containers:
-        - name: {{.Values.global.helloCammis.name}}
-          image: {{.Values.global.helloCammis.imageName}}:{{.Values.global.helloCammis.imageVersion}}
+        - name: {{ .Values.global.helloCammis.name }}
+          {{ if .Values.global.helloCammis.imageVersion }}
+          image: {{ .Values.global.helloCammis.imageName }}:{{ .Values.global.helloCammis.imageVersion }}
+          {{ else }}
+          image: {{ .Values.global.helloCammis.imageName }}:version-{{ .Chart.Version }}
+          {{ end }}
           ports:
             - containerPort: {{ .Values.global.helloCammis.containerPort }}
           env:
