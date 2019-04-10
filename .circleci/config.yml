@@ -213,7 +213,7 @@ jobs:
 # The "tags" filter in the "test" job is necessary for the "build" job to run.
 workflows:
   version: 2
-  test-build:
+  build-and-test:
     jobs:
       - cc-install:
           filters:
@@ -224,7 +224,6 @@ workflows:
             - build
       - test-codeclimate:
           requires:
-            - cc-install
             - build
       - test:
           filters:
@@ -235,10 +234,8 @@ workflows:
             - test-codeclimate
       - upload-coverage:
           requires:
-            - test
+            - test-codeclimate
       - build:
-          requires:
-            - test
           filters:
             branches:
               only: /^r_.+$/
