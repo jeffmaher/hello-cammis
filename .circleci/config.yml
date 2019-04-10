@@ -217,19 +217,10 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - test-whitesource:
-          requires:
-            - cc-install
+      - test-whitesource
       - test-codeclimate:
           requires:
             - cc-install
-      - test:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - test-whitesource
-            - test-codeclimate
       - upload-coverage:
           requires:
             - test-codeclimate
