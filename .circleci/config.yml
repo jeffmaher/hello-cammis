@@ -221,10 +221,10 @@ workflows:
               only: /.*/
       - test-whitesource:
           requires:
-            - build
+            - cc-install
       - test-codeclimate:
           requires:
-            - build
+            - cc-install
       - test:
           filters:
             tags:
