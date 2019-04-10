@@ -51,9 +51,11 @@ jobs:
           root: tmp
           paths:
             - cc-test-reporter
-  test: # Future TODO: Use the Docker image from this repo to run tests. Also, break different tests into different jobs to enable concurrent runs.
+  test-codeclimate: # Future TODO: Use the Docker image from this repo to run tests. Also, break different tests into different jobs to enable concurrent runs.
     <<: *defaults
     working_directory: /app
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-8-oracle
     docker:
       - image: cadhcscammis/cammis-code-analyze:latest
     steps:
@@ -94,6 +96,34 @@ jobs:
           command: |
             ~/repo/tmp/cc-test-reporter sum-coverage ~/repo/tmp/codeclimate.*.json -p 1 -o ~/repo/tmp/codeclimate.total.json
             ~/repo/tmp/cc-test-reporter upload-coverage -i ~/repo/tmp/codeclimate.total.json
+  test-whitesource: 
+    <<: *defaults
+    working_directory: /app
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-8-oracle
+    docker:
+      - image: cadhcscammis/cammis-code-analyze:latest
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/repo/tmp
+      - run:
+          name: Install node modules
+          command: npm install
+      - run:
+          name: Update container repositories
+          command: apk update
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: 
+          name: Run security testss
+          command: |
+            ls -l /tmp
+            /app/wss_agent.sh -c /app/wss-unified-agent-project.config -d /app      
   # This will build a Docker image and push it to an ECR
   # Triggered by tagging the repo or by pushing to a specially-named branch in GitHub
   # The tag must be in ##.##.## format - see workflow below
@@ -189,16 +219,23 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test-whitesource:
+          requires:
+            - build
+      - test-codeclimate:
+          requires:
+            - cc-install
+            - build
       - test:
           filters:
             tags:
               only: /.*/
           requires:
-            - cc-install
+            - test-whitesource
+            - test-codeclimate
       - upload-coverage:
           requires:
             - test
-            - cc-install
       - build:
           requires:
             - test
