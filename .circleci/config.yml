@@ -54,8 +54,6 @@ jobs:
   test-codeclimate: # Future TODO: Use the Docker image from this repo to run tests. Also, break different tests into different jobs to enable concurrent runs.
     <<: *defaults
     working_directory: /app
-    environment:
-      JAVA_HOME: /usr/lib/jvm/java-8-oracle
     docker:
       - image: cadhcscammis/cammis-code-analyze:latest
     steps:
@@ -101,6 +99,7 @@ jobs:
     working_directory: /app
     environment:
       JAVA_HOME: /usr/lib/jvm/java-8-oracle
+      JAVA_TOOL_OPTIONS: -Xmx2018m -Xms64m
     docker:
       - image: cadhcscammis/cammis-code-analyze:latest
     steps:
@@ -122,7 +121,6 @@ jobs:
       - run: 
           name: Run security testss
           command: |
-            ls -l /tmp
             /app/wss_agent.sh -c /app/wss-unified-agent-project.config -d /app      
   # This will build a Docker image and push it to an ECR
   # Triggered by tagging the repo or by pushing to a specially-named branch in GitHub
